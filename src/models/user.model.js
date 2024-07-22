@@ -27,7 +27,7 @@ const userSchema = new Schema({
     avtarImage: {
         type: String
     },
-    coberImage: {
+    coverImage: {
         type: String
     },
     watchHistory: [
@@ -46,8 +46,8 @@ const userSchema = new Schema({
 }, { timestamps: true });
 
 userSchema.pre("save", async function(next) {
-    if(this.isModified("password")) return next();
-    this.password = bcrypt.hash(this.password, process.env.HASH_SALT_ROUND);
+    if(!this.isModified("password")) return next();
+    this.password = await bcrypt.hash(this.password, 10);
     next();
 });
 
