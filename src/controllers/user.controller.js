@@ -87,11 +87,57 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     } catch (error) {
         throw new ApiError(401, error?.message || error)
     }
-})
+});
+
+const changeCurrentPassword = asyncHandler(async (req, res) => {
+    const { oldPassword, newPassword } = req.body;
+    const user = await User.findById(req.user?.id);
+    const isPasswordValid = await user.isPasswordCorrect(oldPassword);
+    if(!isPasswordValid) throw new ApiError(400, "Invalid old password");
+
+    user.password = newPassword;
+    await user.save({ validateBeforeSave : false});
+
+    res.status(201).json(new ApiResponse(200, {}, "Password updated successfully"))
+});
+
+const getCurrentUser = asyncHandler(async (req, res) => {
+    res.status(200).json(new ApiResponse(200, req.user, "current user fetched successfully"));
+});
+
+const updateUserAvtar = asyncHandler( async (req, res) => {
+    const avatarLocalpath = req.file?.path;
+    if(!avatarLocalpath) throw new ApiError(400, "Avtart file is missing!")
+
+    const avtarResponseFromClodinary = await uploadOnCloudinary(avatarLocalpath);
+    if(!avtarResponseFromClodinary?.secure_url) throw new ApiError(500, "Something went wrong while uploading avtar");
+
+    const updatedUser = await User.findByIdAndUpdate(req.user?.id, { $set: { avtarImage: avtarResponseFromClodinary?.secure_url}}, {new: true});
+    if (!updatedUser) throw new ApiError(404, "Failed to update avatar: user not found or invalid user ID");
+
+    res.status(201).json(new ApiResponse(201, {}, "Avtar file uploaded successfully ✅"))
+});
+
+const updateUserCover = asyncHandler( async (req, res) => {
+    const coverLocalpath = req.file?.path;
+    if(!coverLocalpath) throw new ApiError(400, "Cover file is missing!")
+
+    const coverResponseFromClodinary = await uploadOnCloudinary(coverLocalpath);
+    if(!coverResponseFromClodinary?.secure_url) throw new ApiError(500, "Something went wrong while uploading cover");
+
+    const updatedUser = await User.findByIdAndUpdate(req.user?.id, { $set: { coverImage: coverResponseFromClodinary?.secure_url}}, {new: true});
+    if (!updatedUser) throw new ApiError(404, "Failed to update cover: user not found or invalid user ID");
+
+    res.status(201).json(new ApiResponse(201, {}, "Cover file uploaded successfully ✅"))
+});
 
 export { 
     registerUser,
     loginUser,
     logoutUser,
     refreshAccessToken,
+    changeCurrentPassword,
+    getCurrentUser,
+    updateUserAvtar,
+    updateUserCover,
 }
