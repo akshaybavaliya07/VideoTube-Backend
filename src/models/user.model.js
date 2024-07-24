@@ -27,7 +27,13 @@ const userSchema = new Schema({
     avtarImage: {
         type: String
     },
+    avtarImagePublicId: {
+        type: String
+    },
     coverImage: {
+        type: String
+    },
+    coverImagePublicId: {
         type: String
     },
     watchHistory: [

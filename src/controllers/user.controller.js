@@ -1,7 +1,7 @@
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { User } from '../models/user.model.js'
 import { ApiError } from '../utils/ApiError.js'
-import { uploadOnCloudinary } from '../services/cloudinary.js'
+import { uploadOnCloudinary, deleteFromCloudinary } from '../services/cloudinary.js'
 import { ApiResponse } from '../utils/ApiResponse.js'
 import { generateAccessnAndRefreshTokens } from '../services/tokenService.js'
 import { COOKIE_OPTIONS } from '../constants.js'
@@ -29,9 +29,11 @@ const registerUser = asyncHandler( async (req, res) => {
         fullName,
         email,
         username,
+        password,
         avtarImage: avtarResponseFromClodinary ? avtarResponseFromClodinary?.secure_url : "",
+        avtarImagePublicId: avtarResponseFromClodinary ? avtarResponseFromClodinary?.public_id: "",
         coverImage: coverResponseFromClodinary ? coverResponseFromClodinary?.secure_url : "",
-        password
+        coverImagePublicId: coverResponseFromClodinary ? coverResponseFromClodinary?.public_id : "",
     });
 
     res.status(201).json(
@@ -107,28 +109,40 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 
 const updateUserAvtar = asyncHandler( async (req, res) => {
     const avatarLocalpath = req.file?.path;
-    if(!avatarLocalpath) throw new ApiError(400, "Avtart file is missing!")
+    if(!avatarLocalpath) throw new ApiError(400, "Avtart file is missing!");
+
+    const user = await User.findById(req.user?.id);
+    if(!user) throw new ApiError(404, "User not found");
+
+    if(user.avtarImagePublicId) await deleteFromCloudinary(user.avtarImagePublicId);
 
     const avtarResponseFromClodinary = await uploadOnCloudinary(avatarLocalpath);
-    if(!avtarResponseFromClodinary?.secure_url) throw new ApiError(500, "Something went wrong while uploading avtar");
+    if(!avtarResponseFromClodinary?.secure_url || !avtarResponseFromClodinary?.public_id) throw new ApiError(500, "Something went wrong while uploading avtar");
 
-    const updatedUser = await User.findByIdAndUpdate(req.user?.id, { $set: { avtarImage: avtarResponseFromClodinary?.secure_url}}, {new: true});
-    if (!updatedUser) throw new ApiError(404, "Failed to update avatar: user not found or invalid user ID");
+    user.avtarImage = avtarResponseFromClodinary.secure_url;
+    user.avtarImagePublicId = avtarResponseFromClodinary.public_id;
+    await user.save({ validateBeforeSave: false });
 
-    res.status(201).json(new ApiResponse(201, {}, "Avtar file uploaded successfully ✅"))
+    res.status(201).json(new ApiResponse(201, {}, "Avtar file uploaded successfully"))
 });
 
 const updateUserCover = asyncHandler( async (req, res) => {
     const coverLocalpath = req.file?.path;
     if(!coverLocalpath) throw new ApiError(400, "Cover file is missing!")
 
+    const user = await User.findById(req.user?.id);
+    if (!user) throw new ApiError(404, "User not found");
+
+    if (user.coverImagePublicId) await deleteFromCloudinary(user.coverImagePublicId);
+
     const coverResponseFromClodinary = await uploadOnCloudinary(coverLocalpath);
-    if(!coverResponseFromClodinary?.secure_url) throw new ApiError(500, "Something went wrong while uploading cover");
+    if(!coverResponseFromClodinary?.secure_url || !coverResponseFromClodinary?.public_id) throw new ApiError(500, "Something went wrong while uploading cover");
 
-    const updatedUser = await User.findByIdAndUpdate(req.user?.id, { $set: { coverImage: coverResponseFromClodinary?.secure_url}}, {new: true});
-    if (!updatedUser) throw new ApiError(404, "Failed to update cover: user not found or invalid user ID");
+    user.coverImage = coverResponseFromClodinary.secure_url;
+    user.coverImagePublicId = coverResponseFromClodinary.public_id;
+    await user.save({ validateBeforeSave: false });
 
-    res.status(201).json(new ApiResponse(201, {}, "Cover file uploaded successfully ✅"))
+    res.status(201).json(new ApiResponse(201, {}, "Cover file uploaded successfully ✅"));
 });
 
 export { 

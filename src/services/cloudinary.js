@@ -16,6 +16,14 @@ export const uploadOnCloudinary = async (localFilepath) => {
         return response;
     } catch (error) {
         fs.unlinkSync(localFilepath);
-        throw new ApiError(500, "something went wrong while uploading file on clodinary");
+        throw new ApiError(500, "❌ something went wrong while uploading file on clodinary ❌");
     }
 }
+
+export const deleteFromCloudinary = async (publicId) => {
+    try {
+        const response = await cloudinary.uploader.destroy(publicId);
+    } catch (error) {
+        throw new ApiError(500, "❌ Failed to delete file from Cloudinary ❌");
+    }
+};
