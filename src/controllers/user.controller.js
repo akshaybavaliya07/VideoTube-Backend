@@ -5,7 +5,9 @@ import { uploadOnCloudinary, deleteFromCloudinary } from '../services/cloudinary
 import { ApiResponse } from '../utils/ApiResponse.js'
 import { generateAccessnAndRefreshTokens } from '../services/tokenService.js'
 import { COOKIE_OPTIONS } from '../constants.js'
+import { Subscription } from '../models/subscription.model.js'
 import jwt from 'jsonwebtoken'
+import mongoose from 'mongoose'
 
 const registerUser = asyncHandler( async (req, res) => {
     const { fullName, email, username, password } = req.body;
@@ -145,6 +147,88 @@ const updateUserCover = asyncHandler( async (req, res) => {
     res.status(201).json(new ApiResponse(201, {}, "Cover file uploaded successfully ✅"));
 });
 
+const getChannelProfile = asyncHandler( async (req, res) => {
+    const { username } = req.params;
+    if(!username) throw new ApiError(400, "username missing!");
+
+    const channelInfo = await User.aggregate([
+        {
+          $match: {
+            username: username
+          }
+        },
+        {
+          $lookup: {
+            from: "subscriptions",
+            localField: "_id",
+            foreignField: "channel",
+            as: "subscribers"
+          }
+        },
+        {
+          $lookup: {
+            from: "subscriptions",
+            localField: "_id",
+            foreignField: "subscriber",
+            as: "subscribed"
+          }
+        },
+        {
+          $addFields: {
+            subscribersCount: {
+              $size: "$subscribers"
+            },
+            subscribedCount: {
+              $size: "$subscribed"
+            },
+            isSubscribed: {
+              $cond: {
+                if: { $in: [new mongoose.Types.ObjectId(req.user?.id), "$subscribers.subscriber"]},
+                then: true,
+                else: false
+              }
+            }
+          }
+        },
+        {
+          $project: {
+            fullName: 1,
+            username: 1,
+            avtarImage: 1,
+            coverImage: 1,
+            subscribersCount: 1,
+            subscribedCount: 1,
+            isSubscribed: 1
+          }
+        }
+    ]);
+
+    if(!channelInfo?.length) throw new ApiError(400, "Channel not found");
+
+    res.status(200).json( new ApiResponse(200, channelInfo[0], "Channel profile fetched successfully!"));
+});
+
+const subscribeChannel = asyncHandler( async (req, res) => {
+  const { username } = req.params;
+  const channel = await User.findOne({ username: username});
+  
+  await Subscription.create({
+    subscriber: req.user.id,
+    channel: channel._id
+  });
+
+  res.status(201).json( new ApiResponse(201, "Channel subscribed successfully!"));
+});
+
+const unSubscribeChannel = asyncHandler( async (req, res) => {
+  const { username } = req.params;
+  const channel = await User.findOne({ username: username});
+
+  await Subscription.findOneAndDelete({ subscriber: req.user?.id, channel: channel?._id});
+
+  res.status(201).json( new ApiResponse(201, "Channel unSubscribed successfully!"));
+});
+
 export { 
     registerUser,
     loginUser,
@@ -154,4 +238,7 @@ export {
     getCurrentUser,
     updateUserAvtar,
     updateUserCover,
+    getChannelProfile,
+    subscribeChannel,
+    unSubscribeChannel,
 }
