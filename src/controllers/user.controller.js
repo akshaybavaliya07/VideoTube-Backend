@@ -6,6 +6,7 @@ import { ApiResponse } from '../utils/ApiResponse.js'
 import { generateAccessnAndRefreshTokens } from '../services/tokenService.js'
 import { COOKIE_OPTIONS } from '../constants.js'
 import { Subscription } from '../models/subscription.model.js'
+import { Video } from '../models/video.model.js'
 import jwt from 'jsonwebtoken'
 import mongoose from 'mongoose'
 
@@ -229,6 +230,94 @@ const unSubscribeChannel = asyncHandler( async (req, res) => {
   res.status(201).json( new ApiResponse(201, "Channel unSubscribed successfully!"));
 });
 
+const getWatchHistory = asyncHandler( async (req, res) => {
+  const response = await User.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(req.user.id)
+      }
+    },
+    {
+      $lookup: {
+        from: "videos",
+        localField: "watchHistory",
+        foreignField: "_id",
+        as: "watchHistory",
+        pipeline: [
+          {
+            $lookup: {
+              from: "users",
+              localField: "owner",
+              foreignField: "_id",
+              as: "owner",
+              pipeline: [
+                {
+                  $project: {
+                    fullName: 1,
+                    username: 1,
+                    avtarImage: 1,
+                    coverImage: 1
+                  }
+                }
+              ]
+            }
+          },
+          {
+            $addFields: {
+              owner: {
+                $first: "$owner"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      $project: {
+        username: 1, 
+        fullName: 1,
+        email: 1,
+        avtarImage: 1,
+        coverImage: 1,
+        watchHistory: 1
+      }
+    }
+  ]);
+
+  res.status(200).json(new ApiResponse(200, response[0], "Watch History fetched successfully!"));
+});
+
+const addToWatchHistory = asyncHandler( async (req, res) => {
+  const { videoId } = req.body;
+  if (!mongoose.Types.ObjectId.isValid(videoId)) throw new ApiError(400, "Invalid video ID");
+
+  const user = await User.findById(req.user.id);
+  if (!user) throw new ApiError(404, "User not found");
+
+  if(!user.watchHistory.includes(videoId)) {
+    user.watchHistory.push(videoId);
+    await user.save({ validateBeforeSave: false});
+  }
+
+  res.status(201).json(new ApiResponse(201, user.watchHistory, "Video added to watch history successfully!"));
+});
+
+const removeFromWatchHistory = asyncHandler( async (req, res) => {
+  const { videoId } = req.body;
+  if (!mongoose.Types.ObjectId.isValid(videoId)) throw new ApiError(400, "Invalid video ID");
+
+  const user = await User.findById(req.user.id);
+  if (!user) throw new ApiError(404, "User not found");
+  
+  const index = user.watchHistory.indexOf(videoId);
+  if (index === -1) throw new ApiError(404, "Video not found in watch history");
+
+  user.watchHistory.splice(index, 1);
+  await user.save();
+
+  res.status(200).json(new ApiResponse(200, user.watchHistory, "Video removed from watch history successfully!"));
+});
+
 export { 
     registerUser,
     loginUser,
@@ -241,4 +330,7 @@ export {
     getChannelProfile,
     subscribeChannel,
     unSubscribeChannel,
+    getWatchHistory,
+    addToWatchHistory,
+    removeFromWatchHistory
 }

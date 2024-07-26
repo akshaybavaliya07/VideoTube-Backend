@@ -1,5 +1,18 @@
 import { Router } from "express"
-import { registerUser, loginUser, logoutUser, refreshAccessToken, changeCurrentPassword, getCurrentUser, updateUserAvtar, updateUserCover, getChannelProfile, subscribeChannel, unSubscribeChannel } from '../controllers/user.controller.js'
+import { registerUser,
+    loginUser, 
+    logoutUser, 
+    refreshAccessToken, 
+    changeCurrentPassword, 
+    getCurrentUser, 
+    updateUserAvtar, 
+    updateUserCover, 
+    getChannelProfile, 
+    subscribeChannel, 
+    unSubscribeChannel, 
+    getWatchHistory, 
+    addToWatchHistory, 
+    removeFromWatchHistory } from '../controllers/user.controller.js'
 import { upload } from '../middlewares/multer.middleware.js'
 import { verifyJWT } from '../middlewares/auth.middleware.js'
 
@@ -14,12 +27,15 @@ route
 .post('/login', loginUser)
 .post('/logout', verifyJWT, logoutUser)
 .post('/refresh-token', refreshAccessToken)
-.get('/:username', verifyJWT, getChannelProfile)
-.post('/:username/subscribe', verifyJWT, subscribeChannel)
-.post('/:username/unsubscribe', verifyJWT, unSubscribeChannel)
-.post('/change-passowrd', verifyJWT, changeCurrentPassword)
+.get('/watch-history', verifyJWT, getWatchHistory)
+.post('/watch-history', verifyJWT, addToWatchHistory)
+.delete('/watch-history', verifyJWT, removeFromWatchHistory)
+.post('/change-password', verifyJWT, changeCurrentPassword)
 .post('/current-user', verifyJWT, getCurrentUser)
 .post('/update-avtar', verifyJWT, upload.single('avtarImage'), updateUserAvtar)
 .post('/update-cover', verifyJWT, upload.single('coverImage'), updateUserCover)
+.get('/:username', verifyJWT, getChannelProfile)
+.post('/:username/subscribe', verifyJWT, subscribeChannel)
+.post('/:username/unsubscribe', verifyJWT, unSubscribeChannel)
 
 export default route
