@@ -6,7 +6,6 @@ import { ApiResponse } from '../utils/ApiResponse.js'
 import { generateAccessnAndRefreshTokens } from '../services/tokenService.js'
 import { COOKIE_OPTIONS } from '../constants.js'
 import { Subscription } from '../models/subscription.model.js'
-import { Video } from '../models/video.model.js'
 import jwt from 'jsonwebtoken'
 import mongoose from 'mongoose'
 
@@ -24,9 +23,6 @@ const registerUser = asyncHandler( async (req, res) => {
 
     const avtarResponseFromClodinary = await uploadOnCloudinary(avatarLocalpath);
     const coverResponseFromClodinary = await uploadOnCloudinary(coverLocalpath);
-
-    // console.log(avtarResponseFromClodinary);
-    // console.log(coverResponseFromClodinary);
 
     const user = await User.create({
         fullName,
@@ -64,7 +60,7 @@ const loginUser = asyncHandler( async (req, res) => {
 
 const logoutUser = asyncHandler(async (req, res) => {
     await User.findByIdAndUpdate(req.user?.id, {
-        $set: { refreshToken : undefined}
+        $set: { refreshToken : null}
     });
 
     res.status(200)
@@ -117,10 +113,13 @@ const updateUserAvtar = asyncHandler( async (req, res) => {
     const user = await User.findById(req.user?.id);
     if(!user) throw new ApiError(404, "User not found");
 
-    if(user.avtarImagePublicId) await deleteFromCloudinary(user.avtarImagePublicId);
+    const oldAvtarImagePublicId = user.avtarImagePublicId;
 
     const avtarResponseFromClodinary = await uploadOnCloudinary(avatarLocalpath);
-    if(!avtarResponseFromClodinary?.secure_url || !avtarResponseFromClodinary?.public_id) throw new ApiError(500, "Something went wrong while uploading avtar");
+    if(!avtarResponseFromClodinary?.secure_url || !avtarResponseFromClodinary?.public_id) 
+      throw new ApiError(500, "Something went wrong while uploading avtar");
+
+    await deleteFromCloudinary(oldAvtarImagePublicId);
 
     user.avtarImage = avtarResponseFromClodinary.secure_url;
     user.avtarImagePublicId = avtarResponseFromClodinary.public_id;
@@ -136,10 +135,13 @@ const updateUserCover = asyncHandler( async (req, res) => {
     const user = await User.findById(req.user?.id);
     if (!user) throw new ApiError(404, "User not found");
 
-    if (user.coverImagePublicId) await deleteFromCloudinary(user.coverImagePublicId);
+    const oldCoverImagePublicId = user.coverImagePublicId;
 
     const coverResponseFromClodinary = await uploadOnCloudinary(coverLocalpath);
-    if(!coverResponseFromClodinary?.secure_url || !coverResponseFromClodinary?.public_id) throw new ApiError(500, "Something went wrong while uploading cover");
+    if(!coverResponseFromClodinary?.secure_url || !coverResponseFromClodinary?.public_id) 
+      throw new ApiError(500, "Something went wrong while uploading cover");
+
+    await deleteFromCloudinary(oldCoverImagePublicId);
 
     user.coverImage = coverResponseFromClodinary.secure_url;
     user.coverImagePublicId = coverResponseFromClodinary.public_id;
