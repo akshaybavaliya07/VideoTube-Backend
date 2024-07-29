@@ -3,6 +3,7 @@ import { ApiResponse } from '../utils/ApiResponse.js'
 import { uploadOnCloudinary, deleteFromCloudinary } from '../services/cloudinary.js'
 import { ApiError } from '../utils/ApiError.js';
 import { Video } from '../models/video.model.js'
+import { User } from '../models/user.model.js'
 import { Like } from '../models/like.model.js'
 import { Comment } from '../models/comment.model.js'
 import mongoose from 'mongoose'
@@ -155,6 +156,16 @@ const getVideoById = asyncHandler( async (req, res) => {
     ]);
 
     if (!video.length) throw new ApiError(404, "Video not found!");
+
+    // increment views if video fetched 
+    await Video.findByIdAndUpdate(videoId, {
+        $inc: { views: 1} 
+    });
+
+    //add this video to user watch history
+    await User.findByIdAndUpdate(req.user.id, {
+        $addToSet: { watchHistory : videoId}
+    });
 
     res.status(200).json(new ApiResponse(200, video[0], "Video fetched successfully"));
 });

@@ -293,31 +293,24 @@ const addToWatchHistory = asyncHandler( async (req, res) => {
   const { videoId } = req.body;
   if (!mongoose.Types.ObjectId.isValid(videoId)) throw new ApiError(400, "Invalid video ID");
 
-  const user = await User.findById(req.user.id);
-  if (!user) throw new ApiError(404, "User not found");
+  await User.findByIdAndUpdate(req.user.id, {
+    $addToSet: { watchHistory : videoId}
+  });
 
-  if(!user.watchHistory.includes(videoId)) {
-    user.watchHistory.push(videoId);
-    await user.save({ validateBeforeSave: false});
-  }
-
-  res.status(201).json(new ApiResponse(201, user.watchHistory, "Video added to watch history successfully!"));
+  res.status(201).json(new ApiResponse(201, {}, "Video added to watch history successfully!"));
 });
 
 const removeFromWatchHistory = asyncHandler( async (req, res) => {
   const { videoId } = req.body;
   if (!mongoose.Types.ObjectId.isValid(videoId)) throw new ApiError(400, "Invalid video ID");
 
-  const user = await User.findById(req.user.id);
-  if (!user) throw new ApiError(404, "User not found");
-  
-  const index = user.watchHistory.indexOf(videoId);
-  if (index === -1) throw new ApiError(404, "Video not found in watch history");
+  await User.findByIdAndUpdate(
+    req.user.id,
+    { $pull: { watchHistory: videoId } },
+    { new: true }
+  );
 
-  user.watchHistory.splice(index, 1);
-  await user.save();
-
-  res.status(200).json(new ApiResponse(200, user.watchHistory, "Video removed from watch history successfully!"));
+  res.status(200).json(new ApiResponse(200, {} , "Video removed from watch history successfully!"));
 });
 
 export { 
