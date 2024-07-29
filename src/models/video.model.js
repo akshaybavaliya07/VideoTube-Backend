@@ -35,7 +35,11 @@ const videoSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: "User"
     },
-    publicId: {
+    videoFilePublicId: {
+        type: String,
+        required: true
+    },
+    thumbnailPublicId: {
         type: String,
         required: true
     }
