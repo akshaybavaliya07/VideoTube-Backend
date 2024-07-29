@@ -290,7 +290,7 @@ const getWatchHistory = asyncHandler( async (req, res) => {
 });
 
 const addToWatchHistory = asyncHandler( async (req, res) => {
-  const { videoId } = req.body;
+  const { videoId } = req.params;
   if (!mongoose.Types.ObjectId.isValid(videoId)) throw new ApiError(400, "Invalid video ID");
 
   await User.findByIdAndUpdate(req.user.id, {
@@ -301,7 +301,7 @@ const addToWatchHistory = asyncHandler( async (req, res) => {
 });
 
 const removeFromWatchHistory = asyncHandler( async (req, res) => {
-  const { videoId } = req.body;
+  const { videoId } = req.params;
   if (!mongoose.Types.ObjectId.isValid(videoId)) throw new ApiError(400, "Invalid video ID");
 
   await User.findByIdAndUpdate(

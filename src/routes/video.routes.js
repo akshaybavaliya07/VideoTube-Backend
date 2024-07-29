@@ -12,7 +12,7 @@ route.post('/upload-video', upload.fields([
 ]), publishVideo);
 
 route
-.post('/delete-video/:videoId', deleteVideo)
 .get('/:videoId', getVideoById)
+.delete('/:videoId', deleteVideo)
 
 export default route
