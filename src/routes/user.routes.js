@@ -25,17 +25,18 @@ route.post('/register', upload.fields([
 
 route
 .post('/login', loginUser)
-.post('/logout', verifyJWT, logoutUser)
 .post('/refresh-token', refreshAccessToken)
-.get('/watch-history', verifyJWT, getWatchHistory)
-.post('/:videoId', verifyJWT, addToWatchHistory)
-.delete('/:videoId', verifyJWT, removeFromWatchHistory)
-.post('/change-password', verifyJWT, changeCurrentPassword)
-.post('/current-user', verifyJWT, getCurrentUser)
-.patch('/update-avtar', verifyJWT, upload.single('avtarImage'), updateUserAvtar)
-.patch('/update-cover', verifyJWT, upload.single('coverImage'), updateUserCover)
-.get('/:username', verifyJWT, getChannelProfile)
-.post('/:username/subscribe', verifyJWT, subscribeChannel)
-.post('/:username/unsubscribe', verifyJWT, unSubscribeChannel)
+.use(verifyJWT)  // // Apply verifyJWT middleware to all subsequent routes
+.post('/logout', logoutUser)
+.get('/watch-history', getWatchHistory)
+.post('/:videoId', addToWatchHistory)
+.delete('/:videoId', removeFromWatchHistory)
+.post('/change-password', changeCurrentPassword)
+.post('/current-user', getCurrentUser)
+.patch('/update-avtar', upload.single('avtarImage'), updateUserAvtar)
+.patch('/update-cover', upload.single('coverImage'), updateUserCover)
+.get('/:username', getChannelProfile)
+.post('/:username/subscribe', subscribeChannel)
+.post('/:username/unsubscribe', unSubscribeChannel)
 
 export default route
