@@ -42,7 +42,7 @@ const publishVideo = asyncHandler( async (req, res) => {
 
 const getVideoById = asyncHandler( async (req, res) => {
     const { videoId } = req.params;
-    if (!mongoose.isValidObjectId(videoId)) throw new ApiError(400, "Invalid videoId");
+    if (!mongoose.Types.ObjectId.isValid(videoId)) throw new ApiError(400, "Invalid videoId");
 
     const video = await Video.aggregate([
         {

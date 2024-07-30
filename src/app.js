@@ -18,6 +18,7 @@ import videoRouter from './routes/video.routes.js'
 import commentRouter from './routes/comment.routes.js'
 import likeRouter from './routes/like.routes.js'
 import tweetRouter from './routes/tweet.routes.js'
+import subscriptionRouter from './routes/subscriptions.routes.js'
  
 // route declaration
 app
@@ -26,5 +27,6 @@ app
 .use('/api/comment', commentRouter)
 .use('/api/like', likeRouter)
 .use('/api/tweet', tweetRouter)
+.use('/api/subscription', subscriptionRouter)
 
 export default app

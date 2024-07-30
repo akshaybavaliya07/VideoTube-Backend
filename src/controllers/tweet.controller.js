@@ -4,6 +4,7 @@ import { ApiError } from '../utils/ApiError.js'
 import { Tweet } from '../models/tweet.model.js'
 import { Like } from '../models/like.model.js'
 import { User } from '../models/user.model.js'
+import mongoose from 'mongoose'
 
 const createTweet = asyncHandler( async (req, res) => {
     const { content } = req.body;
@@ -51,7 +52,7 @@ const getUserTweets = asyncHandler( async (req, res) => {
     const tweets = await Tweet.aggregate([
         {
             $match: {
-                owner: userId
+                owner: new mongoose.Types.ObjectId(userId)
             }
         },
         {
