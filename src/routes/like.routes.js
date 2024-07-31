@@ -4,8 +4,7 @@ import { toggleVideoLike, toggleCommentLike, toggleTweetLike } from '../controll
 
 const route = Router();
 
-route
-.use(verifyJWT)
+route.use(verifyJWT)
 .post('/toggle/video/:videoId', toggleVideoLike)
 .post('/toggle/comment/:commentId', toggleCommentLike)
 .post('/toggle/tweet/:tweetId', toggleTweetLike)

@@ -54,7 +54,7 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
             $project: {
                 subscriber: {
                     username: 1,
-                    avatarImage: 1
+                    avtarImage: 1
                 }
             }
         }
