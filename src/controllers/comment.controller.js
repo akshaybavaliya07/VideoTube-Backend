@@ -66,7 +66,9 @@ const getVideoComments = asyncHandler(async (req, res) => {
                 owner: 1,
                 likes: 1,
                 isLiked: 1,
-                createdAt: 1
+                createdAt: {
+                    $dateToParts: { date: "$createdAt" }
+                }
             }
         }
     ]

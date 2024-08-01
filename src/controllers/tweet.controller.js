@@ -91,7 +91,9 @@ const getUserTweets = asyncHandler( async (req, res) => {
             $project: {
                 content: 1,
                 likesCount: 1,
-                createdAt: 1,
+                createdAt: {
+                    $dateToParts: { date: "$createdAt" }
+                },
                 isLiked: 1
             },
         },

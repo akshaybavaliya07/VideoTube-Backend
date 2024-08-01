@@ -137,7 +137,9 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
                 name: 1,
                 totalVideos: 1,
                 totalViews: 1,
-                updatedAt: 1
+                updatedAt: {
+                    $dateToParts: { date: "$createdAt" }
+                }
             }
         }
     ]);

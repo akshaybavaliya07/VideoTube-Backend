@@ -194,6 +194,9 @@ const getVideoById = asyncHandler( async (req, res) => {
                 title: 1,
                 description: 1,
                 duration: 1,
+                createdAt: {
+                    $dateToParts: { date: "$createdAt" }
+                },
                 owner: 1,
                 likes: 1,
                 comments: 1
