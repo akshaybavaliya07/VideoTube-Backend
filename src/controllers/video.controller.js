@@ -8,6 +8,54 @@ import { Like } from '../models/like.model.js'
 import { Comment } from '../models/comment.model.js'
 import mongoose from 'mongoose'
 
+const getAllVideos = asyncHandler(async (req, res) => {
+    const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
+
+    const pipeline = [];
+    const pageNumber = parseInt(page, 10);
+    const limitNumber = parseInt(limit, 10);
+
+    if(query) {
+        pipeline.push({
+            $search: {
+                index: "search-videos",
+                text: {
+                    query,
+                    path: ["title", "description"]
+                } 
+            }
+        });
+    }
+
+    if(userId) {
+        if(!mongoose.Types.ObjectId.isValid(userId)) throw new ApiError(400, "Invalid userId");
+        pipeline.push({
+            $match: {
+                owner: new mongoose.Types.ObjectId(userId)
+            }
+        });
+    }
+    
+    pipeline.push({ $match: { isPublished: true }});
+
+    if (sortBy && sortType) {
+        pipeline.push({
+            $sort: {
+                [sortBy]: sortType === 'asc' ? 1 : -1
+            }
+        });
+    }
+
+    const options = {
+        page: pageNumber,
+        limit: limitNumber
+    };
+    
+    const videos = await Video.aggregatePaginate(pipeline, options);
+
+    res.status(200).json(new ApiResponse(200, videos, "Videos fetched successfully"));
+});
+
 const publishVideo = asyncHandler( async (req, res) => {
     const { title, description } = req.body;
 
@@ -189,6 +237,7 @@ const deleteVideo = asyncHandler( async (req, res) => {
 });
 
 export {
+    getAllVideos,
     publishVideo,
     deleteVideo,
     getVideoById

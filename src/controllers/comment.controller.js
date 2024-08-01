@@ -8,13 +8,7 @@ const getVideoComments = asyncHandler(async (req, res) => {
     const {videoId} = req.params;
     const {page = 1, limit = 10} = req.query;
 
-    // Convert page and limit to integers
-    const pageNumber = parseInt(page, 10);
-    const limitNumber = parseInt(limit, 10);
-    // Calculate the number of documents to skip
-    const skip = (pageNumber - 1) * limitNumber;
-
-    const videoComments = await Comment.aggregate([
+    const commentsAggregatePipeline = [
         {
             $match: {
                 video: new mongoose.Types.ObjectId(videoId)
@@ -74,14 +68,15 @@ const getVideoComments = asyncHandler(async (req, res) => {
                 isLiked: 1,
                 createdAt: 1
             }
-        },
-        {
-            $skip: skip
-        },
-        {
-            $limit: limitNumber
         }
-    ]);
+    ]
+
+    const options = {
+        page: parseInt(page, 10),
+        limit: parseInt(limit, 10)
+    }
+
+    const videoComments = await Comment.aggregatePaginate(commentsAggregatePipeline, options);
 
     res.status(200).json( new ApiResponse(200, videoComments, "Comments fetched successfully!"))
 });
