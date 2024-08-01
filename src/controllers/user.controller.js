@@ -5,7 +5,6 @@ import { uploadOnCloudinary, deleteFromCloudinary } from '../services/cloudinary
 import { ApiResponse } from '../utils/ApiResponse.js'
 import { generateAccessnAndRefreshTokens } from '../services/tokenService.js'
 import { COOKIE_OPTIONS } from '../constants.js'
-import { Subscription } from '../models/subscription.model.js'
 import jwt from 'jsonwebtoken'
 import mongoose from 'mongoose'
 
@@ -18,10 +17,10 @@ const registerUser = asyncHandler( async (req, res) => {
     const existedUser = await User.findOne({ $or: [{username}, {email}]});   
     if(existedUser) throw new ApiError(409, "User with email or username already exists");
 
-    const avatarLocalpath = req.files?.avtarImage[0]?.path; 
+    const avtarLocalpath = req.files?.avtarImage[0]?.path; 
     const coverLocalpath = req.files?.coverImage[0]?.path; 
 
-    const avtarResponseFromClodinary = await uploadOnCloudinary(avatarLocalpath);
+    const avtarResponseFromClodinary = await uploadOnCloudinary(avtarLocalpath);
     const coverResponseFromClodinary = await uploadOnCloudinary(coverLocalpath);
 
     const user = await User.create({
@@ -206,30 +205,9 @@ const getChannelProfile = asyncHandler( async (req, res) => {
         }
     ]);
 
-    if(!channelInfo?.length) throw new ApiError(400, "Channel not found");
+    if(!channelInfo.length) throw new ApiError(400, "Channel not found");
 
     res.status(200).json( new ApiResponse(200, channelInfo[0], "Channel profile fetched successfully!"));
-});
-
-const subscribeChannel = asyncHandler( async (req, res) => {
-  const { username } = req.params;
-  const channel = await User.findOne({ username: username});
-  
-  await Subscription.create({
-    subscriber: req.user.id,
-    channel: channel._id
-  });
-
-  res.status(201).json( new ApiResponse(201, "Channel subscribed successfully!"));
-});
-
-const unSubscribeChannel = asyncHandler( async (req, res) => {
-  const { username } = req.params;
-  const channel = await User.findOne({ username: username});
-
-  await Subscription.findOneAndDelete({ subscriber: req.user?.id, channel: channel?._id});
-
-  res.status(201).json( new ApiResponse(201, "Channel unSubscribed successfully!"));
 });
 
 const getWatchHistory = asyncHandler( async (req, res) => {
@@ -289,17 +267,6 @@ const getWatchHistory = asyncHandler( async (req, res) => {
   res.status(200).json(new ApiResponse(200, response[0], "Watch History fetched successfully!"));
 });
 
-const addToWatchHistory = asyncHandler( async (req, res) => {
-  const { videoId } = req.params;
-  if (!mongoose.Types.ObjectId.isValid(videoId)) throw new ApiError(400, "Invalid video ID");
-
-  await User.findByIdAndUpdate(req.user.id, {
-    $addToSet: { watchHistory : videoId}
-  });
-
-  res.status(201).json(new ApiResponse(201, {}, "Video added to watch history successfully!"));
-});
-
 const removeFromWatchHistory = asyncHandler( async (req, res) => {
   const { videoId } = req.params;
   if (!mongoose.Types.ObjectId.isValid(videoId)) throw new ApiError(400, "Invalid video ID");
@@ -323,9 +290,6 @@ export {
     updateUserAvtar,
     updateUserCover,
     getChannelProfile,
-    subscribeChannel,
-    unSubscribeChannel,
     getWatchHistory,
-    addToWatchHistory,
     removeFromWatchHistory
 }

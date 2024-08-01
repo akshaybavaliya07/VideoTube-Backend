@@ -20,7 +20,7 @@ const createPlaylist = asyncHandler(async (req, res) => {
 const getPlaylistById = asyncHandler(async (req, res) => {
     const {playlistId} = req.params;
 
-    const playlist = await mongoose.aggregate([
+    const playlist = await Playlist.aggregate([
         {
             $match: {
                 _id: new mongoose.Types.ObjectId(playlistId),

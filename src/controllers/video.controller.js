@@ -12,8 +12,6 @@ const getAllVideos = asyncHandler(async (req, res) => {
     const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
 
     const pipeline = [];
-    const pageNumber = parseInt(page, 10);
-    const limitNumber = parseInt(limit, 10);
 
     if(query) {
         pipeline.push({
@@ -47,8 +45,8 @@ const getAllVideos = asyncHandler(async (req, res) => {
     }
 
     const options = {
-        page: pageNumber,
-        limit: limitNumber
+        page: parseInt(page, 10),
+        limit: parseInt(limit, 10)
     };
     
     const videos = await Video.aggregatePaginate(pipeline, options);

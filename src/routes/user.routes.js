@@ -7,11 +7,8 @@ import { registerUser,
     getCurrentUser, 
     updateUserAvtar, 
     updateUserCover, 
-    getChannelProfile, 
-    subscribeChannel, 
-    unSubscribeChannel, 
+    getChannelProfile,
     getWatchHistory, 
-    addToWatchHistory, 
     removeFromWatchHistory } from '../controllers/user.controller.js'
 import { upload } from '../middlewares/multer.middleware.js'
 import { verifyJWT } from '../middlewares/auth.middleware.js'
@@ -29,14 +26,11 @@ route
 .use(verifyJWT)  // // Apply verifyJWT middleware to all subsequent routes
 .post('/logout', logoutUser)
 .get('/watch-history', getWatchHistory)
-.post('/:videoId', addToWatchHistory)
 .delete('/:videoId', removeFromWatchHistory)
 .post('/change-password', changeCurrentPassword)
 .post('/current-user', getCurrentUser)
 .patch('/update-avtar', upload.single('avtarImage'), updateUserAvtar)
 .patch('/update-cover', upload.single('coverImage'), updateUserCover)
 .get('/:username', getChannelProfile)
-.post('/:username/subscribe', subscribeChannel)
-.post('/:username/unsubscribe', unSubscribeChannel)
 
 export default route
