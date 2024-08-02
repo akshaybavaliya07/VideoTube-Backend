@@ -5,7 +5,7 @@ import { createTweet, updateTweet, deleteTweet, getUserTweets } from '../control
 const route = Router();
 
 route.use(verifyJWT)
-.post('/create-tweet', createTweet)
+.post('/', createTweet)
 .patch('/:tweetId', updateTweet)
 .delete('/:tweetId', deleteTweet)
 .get('/user/:userId', getUserTweets)

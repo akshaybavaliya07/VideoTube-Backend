@@ -48,7 +48,11 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
             }
         },
         {
-            $unwind: "$subscriber"
+            $addFields: {
+                subscriber: {
+                    $first: "$subscriber"
+                } 
+            }
         },
         {
             $project: {
@@ -91,10 +95,7 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
         },
         {
             $project: {
-                channel: {
-                    username: 1,
-                    avtarImage: 1
-                }
+                channel: 1,
             }
         }
     ]);

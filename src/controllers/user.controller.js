@@ -105,6 +105,25 @@ const getCurrentUser = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, req.user, "current user fetched successfully"));
 });
 
+const updateUserProfile = asyncHandler( async (req, res) => {
+  const { fullName } = req.body;
+  if(!fullName) throw new ApiError(400, "Nothing new to change");
+
+  const user = await User.findByIdAndUpdate(
+    req.user.id,
+    {
+        $set: {
+            fullName
+        }
+    },
+    { new: true }
+  ).select("username fullName email");
+
+  if (!user) throw new ApiError(404, "User not found");
+
+  res.status(200).json( new ApiResponse(200, user, "profile updated."));
+});
+
 const updateUserAvtar = asyncHandler( async (req, res) => {
     const avatarLocalpath = req.file?.path;
     if(!avatarLocalpath) throw new ApiError(400, "Avtart file is missing!");
@@ -287,6 +306,7 @@ export {
     refreshAccessToken,
     changeCurrentPassword,
     getCurrentUser,
+    updateUserProfile,
     updateUserAvtar,
     updateUserCover,
     getChannelProfile,

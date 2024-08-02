@@ -1,6 +1,6 @@
-import { asyncHandler } from '../utils/asyncHandler'
-import { ApiResponse } from '../utils/ApiResponse'
-import { Like } from '../models/like.model'
+import { asyncHandler } from '../utils/asyncHandler.js'
+import { ApiResponse } from '../utils/ApiResponse.js'
+import { Like } from '../models/like.model.js'
 import mongoose from 'mongoose';
 
 const toggleVideoLike = asyncHandler( async (req, res) => {

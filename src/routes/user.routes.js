@@ -4,7 +4,8 @@ import { registerUser,
     logoutUser, 
     refreshAccessToken, 
     changeCurrentPassword, 
-    getCurrentUser, 
+    getCurrentUser,
+    updateUserProfile, 
     updateUserAvtar, 
     updateUserCover, 
     getChannelProfile,
@@ -29,6 +30,7 @@ route
 .delete('/:videoId', removeFromWatchHistory)
 .post('/change-password', changeCurrentPassword)
 .post('/current-user', getCurrentUser)
+.patch('/update-profile', updateUserProfile)
 .patch('/update-avtar', upload.single('avtarImage'), updateUserAvtar)
 .patch('/update-cover', upload.single('coverImage'), updateUserCover)
 .get('/:username', getChannelProfile)

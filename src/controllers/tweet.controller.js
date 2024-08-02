@@ -44,12 +44,12 @@ const deleteTweet = asyncHandler( async (req, res) => {
 
     await Like.deleteMany({ tweet: tweetId});
 
-    res.status(200).json( new ApiResponse(200, "Tweet deleted successfully"))
+    res.status(200).json( new ApiResponse(200, {},"Tweet deleted successfully"))
 });
 
 const getUserTweets = asyncHandler( async (req, res) => {
     const { userId } = req.params;
-    const user = await User.findById(req.user.id).select('username avatarImage');
+    const user = await User.findById(req.user.id).select('username avtarImage');
     if (!user) throw new ApiError(404, "User not found");
 
     const tweets = await Tweet.aggregate([
@@ -99,7 +99,7 @@ const getUserTweets = asyncHandler( async (req, res) => {
         },
     ]);
 
-    res.status(200).json(new ApiResponse(200, {...user, ...tweets}, "Tweets fetched successfully"));
+    res.status(200).json(new ApiResponse(200, {user, tweets}, "Tweets fetched successfully"));
 });
 
 export {
