@@ -119,6 +119,41 @@ const publishVideo = asyncHandler( async (req, res) => {
     res.status(201).json( new ApiResponse(201, video, "Video uploaded successfully!"));
 });
 
+const updateVideo = asyncHandler(async (req, res) => {
+    const { title, description } = req.body;
+    const { videoId } = req.params;
+
+    if (!title && !description && !req.file) {
+        throw new ApiError(400, "At least one of title, description, or thumbnail is required");
+    }
+
+    const video = await Video.findById(videoId); 
+    if(!video) throw new ApiError(404, "Invalid videoId");
+
+    let newThumbnailUrl = video.thumbnail;
+    let newThumbnailPublicId = video.thumbnailPublicId;
+
+    if (req.file?.path) {
+        const oldThumbnailPublicId = video.thumbnailPublicId;
+        const thumbnailLocalPath = req.file.path;
+
+        const thumbnailResponseFromCloudinary = await uploadOnCloudinary(thumbnailLocalPath);
+        newThumbnailUrl = thumbnailResponseFromCloudinary.secure_url;
+        newThumbnailPublicId = thumbnailResponseFromCloudinary.public_id;
+
+        await deleteFromCloudinary(oldThumbnailPublicId);
+    }
+
+    if (title) video.title = title;
+    if (description) video.description = description;
+    video.thumbnail = newThumbnailUrl;
+    video.thumbnailPublicId = newThumbnailPublicId;
+
+    await video.save({ validateBeforeSave: false });
+
+    return res.status(200).json(new ApiResponse(200, video, "Video updated successfully"));
+});
+
 const getVideoById = asyncHandler( async (req, res) => {
     const { videoId } = req.params;
     if (!mongoose.Types.ObjectId.isValid(videoId)) throw new ApiError(400, "Invalid videoId");
@@ -263,6 +298,7 @@ const togglePublishStatus = asyncHandler( async (req, res) => {
 export {
     getAllVideos,
     publishVideo,
+    updateVideo,
     deleteVideo,
     getVideoById,
     togglePublishStatus
