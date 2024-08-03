@@ -13,20 +13,20 @@ const getAllVideos = asyncHandler(async (req, res) => {
 
     const pipeline = [];
 
-    if(query) {
+    if (query) {
         pipeline.push({
             $search: {
                 index: "search-videos",
                 text: {
-                    query,
+                    query: query,
                     path: ["title", "description"]
-                } 
+                }
             }
         });
     }
 
-    if(userId) {
-        if(!mongoose.Types.ObjectId.isValid(userId)) throw new ApiError(400, "Invalid userId");
+    if (userId) {
+        if (!mongoose.Types.ObjectId.isValid(userId)) throw new ApiError(400, "Invalid userId");
         pipeline.push({
             $match: {
                 owner: new mongoose.Types.ObjectId(userId)
@@ -36,6 +36,23 @@ const getAllVideos = asyncHandler(async (req, res) => {
     
     pipeline.push({ $match: { isPublished: true }});
 
+    pipeline.push({
+        $lookup: {
+            from: 'users',
+            localField: 'owner',
+            foreignField: '_id',
+            as: 'owner',
+            pipeline: [
+                {
+                    $project: {
+                        username: 1,
+                        avtarImage: 1
+                    }
+                }
+            ]
+        }
+    })
+
     if (sortBy && sortType) {
         pipeline.push({
             $sort: {
@@ -44,12 +61,28 @@ const getAllVideos = asyncHandler(async (req, res) => {
         });
     }
 
-    const options = {
-        page: parseInt(page, 10),
-        limit: parseInt(limit, 10)
-    };
+    pipeline.push({
+        $project: {
+            videoFile: 1,
+            thumbnail: 1,
+            title: 1,
+            description: 1,
+            duration: 1,
+            views: 1,
+            isPublished: 1,
+            owner: 1,
+            createdAt: {
+                $dateToParts: { date: "$createdAt" }
+            }
+        }
+    });
+
+    pipeline.push(
+        { $skip: (parseInt(page, 10) - 1) * parseInt(limit, 10) },
+        { $limit: parseInt(limit, 10) }
+    );
     
-    const videos = await Video.aggregatePaginate(pipeline, options);
+    const videos = await Video.aggregate(pipeline);
 
     res.status(200).json(new ApiResponse(200, videos, "Videos fetched successfully"));
 });
@@ -106,7 +139,9 @@ const getVideoById = asyncHandler( async (req, res) => {
         },
         {
             $addFields: {
-                $size: "$likes"
+                likes: {
+                    $size: "$likes"
+                }
             }
         },
         {
@@ -131,7 +166,7 @@ const getVideoById = asyncHandler( async (req, res) => {
                             },
                             isSubscribed: {
                                 $cond: {
-                                    $if: { $in: [req.user.id, "$subscribers.subscriber"]},
+                                    if: { $in: [new mongoose.Types.ObjectId(req.user.id), "$subscribers.subscriber"]},
                                     then: true,
                                     else: false
                                 }
@@ -157,49 +192,18 @@ const getVideoById = asyncHandler( async (req, res) => {
             }
         },
         {
-            $lookup: {
-                from: 'comments',
-                localField: '_id',
-                foreignField: 'video',
-                as: 'comments',
-                pipeline: [
-                    {
-                       $lookup: {
-                        from: 'users',
-                        localField: 'owner',
-                        foreignField: '_id',
-                        as: 'owner'
-                       } 
-                    },
-                    {
-                        $addFields: {
-                            owner: {
-                              $first: "$owner"
-                            }
-                        }
-                    },
-                    {
-                        $project: {
-                            username: 1,
-                            avtarImage: 1
-                        }
-                    }
-                ]
-            }
-        },
-        {
             $project: {
                 videoFile: 1,
                 thumbnail: 1,
                 title: 1,
                 description: 1,
                 duration: 1,
+                views: 1,
                 createdAt: {
                     $dateToParts: { date: "$createdAt" }
                 },
                 owner: 1,
-                likes: 1,
-                comments: 1
+                likes: 1
             }
         },
     ]);

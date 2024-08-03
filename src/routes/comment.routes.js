@@ -3,12 +3,11 @@ import { verifyJWT } from '../middlewares/auth.middleware.js'
 import { addComment, updateComment, deleteComment, getVideoComments } from '../controllers/comment.controller.js'
 
 const route = Router();
-route.use(verifyJWT);
 
-route
+route.use(verifyJWT)
 .post('/:videoId', addComment)
 .patch('/:commentId', updateComment)
 .delete('/:commentId', deleteComment)
-.get('/:videoId', getVideoComments)
+.get('/video/:videoId', getVideoComments)
 
 export default route

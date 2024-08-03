@@ -27,7 +27,7 @@ route
 .use(verifyJWT)  // // Apply verifyJWT middleware to all subsequent routes
 .post('/logout', logoutUser)
 .get('/watch-history', getWatchHistory)
-.delete('/:videoId', removeFromWatchHistory)
+.delete('/watch-history/:videoId', removeFromWatchHistory)
 .post('/change-password', changeCurrentPassword)
 .post('/current-user', getCurrentUser)
 .patch('/update-profile', updateUserProfile)

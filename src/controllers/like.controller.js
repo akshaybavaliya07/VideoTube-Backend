@@ -10,7 +10,7 @@ const toggleVideoLike = asyncHandler( async (req, res) => {
     if(likedAlready) {
         await Like.findOneAndDelete({ video: videoId, likedBy: req.user.id });
 
-        res.status(200).json( new ApiResponse(200, { isLiked: false}));
+        return res.status(200).json( new ApiResponse(200, { isLiked: false}));
     }
 
     await Like.create({
@@ -28,7 +28,7 @@ const toggleCommentLike = asyncHandler( async (req, res) => {
     if(likedAlready) {
         await Like.findOneAndDelete({ comment: commentId, likedBy: req.user.id });
 
-        res.status(200).json( new ApiResponse(200, { isLiked: false}));
+        return res.status(200).json( new ApiResponse(200, { isLiked: false}));
     }
 
     await Like.create({
@@ -46,7 +46,7 @@ const toggleTweetLike = asyncHandler( async (req, res) => {
     if(likedAlready) {
         await Like.findOneAndDelete({ tweet: tweetId, likedBy: req.user.id });
 
-        res.status(200).json( new ApiResponse(200, { isLiked: false}));
+        return res.status(200).json( new ApiResponse(200, { isLiked: false}));
     }
 
     await Like.create({
@@ -62,7 +62,8 @@ const getLikedVideos = asyncHandler(async (req, res) => {
     const likedVideos = await Like.aggregate([
         {
             $match: {
-                likedBy: new mongoose.Types.ObjectId(req.user.id)
+                likedBy: new mongoose.Types.ObjectId(req.user.id),
+                video: { $exists: true }
             }
         },
         {
@@ -94,10 +95,10 @@ const getLikedVideos = asyncHandler(async (req, res) => {
                             title: 1,
                             duration: 1,
                             views: 1,
-                            createdAt: 1,
                             owner: {
                                 username: 1
-                            }
+                            },
+                            createdAt: { $dateToParts: { date: "$createdAt" }},
                         }
                     }
                 ]

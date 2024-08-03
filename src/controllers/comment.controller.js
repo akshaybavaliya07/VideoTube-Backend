@@ -48,7 +48,7 @@ const getVideoComments = asyncHandler(async (req, res) => {
                 },
                 isLiked: {
                     $cond: {
-                        if: { $in: [req.user.id, '$likes.likedBy']},
+                        if: { $in: [new mongoose.Types.ObjectId(req.user.id), '$likes.likedBy']},
                         then: true,
                         else: false
                     }
@@ -120,7 +120,7 @@ const deleteComment = asyncHandler( async (req, res) => {
 
     await Like.deleteMany({ comment: commentId });
 
-    res.status(200).json( new ApiResponse(200, { commentId }, "Comment deleted successfully"));
+    res.status(200).json( new ApiResponse(200, { }, "Comment deleted successfully"));
 });
 
 export {

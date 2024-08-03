@@ -7,10 +7,11 @@ const toggleSubscription = asyncHandler(async (req, res) => {
     const {channelId} = req.params;
 
     const isSubscribed = await Subscription.findOne({ subscriber: req.user.id, channel: channelId});
+    console.log(isSubscribed);
     if(isSubscribed) {
         await Subscription.deleteOne({ subscriber: req.user.id, channel: channelId});
 
-        res.status(200).json( new ApiResponse(200, { subscribed: false} ,'Channel unsubscribed successfully!'));
+        return res.status(200).json( new ApiResponse(200, { subscribed: false} ,'Channel unsubscribed successfully!'));
     }
     
     await Subscription.create({

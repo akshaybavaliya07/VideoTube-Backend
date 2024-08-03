@@ -49,7 +49,7 @@ const deleteTweet = asyncHandler( async (req, res) => {
 
 const getUserTweets = asyncHandler( async (req, res) => {
     const { userId } = req.params;
-    const user = await User.findById(req.user.id).select('username avtarImage');
+    const user = await User.findById(userId).select('username avtarImage');
     if (!user) throw new ApiError(404, "User not found");
 
     const tweets = await Tweet.aggregate([
@@ -80,7 +80,7 @@ const getUserTweets = asyncHandler( async (req, res) => {
                 },
                 isLiked: {
                     $cond: {
-                        if: {$in: [req.user.id, "$likeDetails.likedBy"]},
+                        if: {$in: [new mongoose.Types.ObjectId(req.user.id), "$likeDetails.likedBy"]},
                         then: true,
                         else: false
                     }

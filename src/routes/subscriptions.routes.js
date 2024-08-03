@@ -6,8 +6,8 @@ const route = Router();
 
 route
 .get('/subscribers/:channelId', getUserChannelSubscribers)
+.get('/subscriptions/:userId', getSubscribedChannels)
 .use(verifyJWT)
 .post('/toggle/:channelId', toggleSubscription)
-.get('/subscriptions/:userId', getSubscribedChannels)
 
 export default route
